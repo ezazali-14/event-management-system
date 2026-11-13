@@ -85,7 +85,7 @@ export default function App() {
   });
 
   // --- UI Navigation State ---
-  const [activeTab, setActiveTab] = useState('browse'); // Attendee: 'browse'|'my-tickets'|'transactions'|'profile'|'about'|'help' -- Organizer: 'dashboard'|'scanner'|'revenue'|'staff'|'certificates'|'announcements'|'org-profile'
+  const [activeTab, setActiveTab] = useState('browse');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [priceFilter, setPriceFilter] = useState('all');
@@ -107,7 +107,6 @@ export default function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editEventModal, setEditEventModal] = useState(null);
 
-  // Host Event Wizard Ticket Tiers Form State
   const [newEvent, setNewEvent] = useState({
     title: '',
     category: 'Hackathons & Tech',
@@ -126,7 +125,7 @@ export default function App() {
   // --- Feature 1: Gate Scanner State ---
   const [scannerSelectedEventId, setScannerSelectedEventId] = useState('evt-tech-01');
   const [scannerPassIdInput, setScannerPassIdInput] = useState('');
-  const [scannerScanResult, setScannerScanResult] = useState(null); // { status: 'success'|'duplicate'|'invalid', message: '', attendee: null, timestamp: '' }
+  const [scannerScanResult, setScannerScanResult] = useState(null);
 
   // --- Feature 2: Bank Settlement State ---
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
@@ -144,7 +143,7 @@ export default function App() {
 
   // --- Feature 4: Certificate Issuer State ---
   const [certSelectedEventId, setCertSelectedEventId] = useState('evt-tech-01');
-  const [previewCertModal, setPreviewCertModal] = useState(null); // certificate obj
+  const [previewCertModal, setPreviewCertModal] = useState(null);
 
   // --- Feature 5: Bulk Email Dispatcher State ---
   const [broadcastTargetEventId, setBroadcastTargetEventId] = useState('evt-tech-01');
@@ -246,7 +245,6 @@ export default function App() {
       return;
     }
 
-    // Mark as Checked-In
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const updatedRoster = roster.map(r => r.bookingId === cleanId ? { ...r, checkedIn: true, checkInTime: nowTime } : r);
     const updatedPasses = myPasses.map(p => p.bookingId === cleanId ? { ...p, checkedIn: true, checkInTime: nowTime } : p);
@@ -319,6 +317,27 @@ export default function App() {
     link.click();
     document.body.removeChild(link);
     showToast('Financial Audit CSV Statement downloaded');
+  };
+
+  const handleExportCSV = (evt) => {
+    const eventRoster = roster.filter(r => r.eventId === evt.id);
+    const headers = ['Pass ID', 'Attendee Name', 'Email', 'Tier', 'Status'];
+    const rows = eventRoster.map(r => [r.bookingId, r.attendeeName, r.attendeeEmail, r.tierName || 'General', r.checkedIn ? 'Checked-In' : 'Pending']);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csvContent));
+    link.setAttribute('download', `${evt.title.replace(/\s+/g, '_')}_Roster.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Event roster exported to CSV');
+  };
+
+  const handleDeleteEvent = (id) => {
+    if (window.confirm('Delete this event listing?')) {
+      setEvents(events.filter(e => e.id !== id));
+      showToast('Event deleted');
+    }
   };
 
   // --- Feature 3: Volunteer Delegation ---
@@ -654,7 +673,7 @@ export default function App() {
                     <button onClick={() => setActiveTab('transactions')} className={`px-3 py-1.5 rounded-lg font-semibold transition ${activeTab === 'transactions' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>Transactions</button>
                     <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-lg font-semibold transition ${activeTab === 'profile' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>Profile</button>
                     <button onClick={() => setActiveTab('about')} className={`px-3 py-1.5 rounded-lg font-semibold transition ${activeTab === 'about' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>About</button>
-                    <button onClick={() => setActiveTab('help')} className={`px-3 py-1.5 rounded-lg font-semibold transition ${activeTab === 'help' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>Help</button>
+                    <button onClick={() => setActiveTab('help')} className={`px-3 py-1.5 rounded-lg font-semibold transition ${activeTab === 'help' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>Docs & Help</button>
                   </div>
                 ) : (
                   <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
@@ -733,7 +752,6 @@ export default function App() {
               {/* 1. DASHBOARD & EVENTS TAB */}
               {activeTab === 'dashboard' && (
                 <div className="space-y-8">
-                  {/* Scoped Metrics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-white p-5 border border-slate-200 rounded-2xl shadow-xs">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Live Listings</span>
@@ -753,7 +771,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Scoped Events Directory */}
                   <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                     <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
                       <h3 className="font-bold text-sm text-slate-900">Owned Event Directory</h3>
@@ -810,7 +827,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* 2. GATE SCANNER TAB (FEATURE 1) */}
+              {/* 2. GATE SCANNER TAB */}
               {activeTab === 'scanner' && (
                 <div className="space-y-6">
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
@@ -838,7 +855,6 @@ export default function App() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Viewfinder simulation */}
                       <div className="bg-slate-950 rounded-2xl p-6 text-white text-center flex flex-col items-center justify-center relative overflow-hidden min-h-[260px] border border-slate-800">
                         <div className="w-36 h-36 border-2 border-dashed border-blue-400/70 rounded-2xl flex items-center justify-center relative bg-slate-900/50">
                           <div className="w-full h-0.5 bg-blue-500 animate-pulse absolute top-1/2 left-0 shadow-[0_0_8px_#3b82f6]" />
@@ -850,7 +866,6 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Manual Verification Form */}
                       <div className="space-y-4 text-xs font-semibold">
                         <form onSubmit={handleVerifyPass} className="space-y-3">
                           <label className="block text-slate-700 font-bold">Manual Pass ID Quick-Scan *</label>
@@ -871,7 +886,6 @@ export default function App() {
                           </div>
                         </form>
 
-                        {/* Interactive Test Pass Chips */}
                         <div>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Quick Test Pass IDs:</span>
                           <div className="flex flex-wrap gap-1.5">
@@ -888,7 +902,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Scanner Result Card */}
                         {scannerScanResult && (
                           <div className={`p-4 rounded-xl border text-xs font-semibold animate-fade-in ${
                             scannerScanResult.status === 'success'
@@ -924,10 +937,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* 3. REVENUE & PAYOUTS TAB (FEATURE 2) */}
+              {/* 3. REVENUE & PAYOUTS TAB */}
               {activeTab === 'revenue' && (
                 <div className="space-y-6">
-                  {/* Financial Overview Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white p-5 border border-slate-200 rounded-2xl shadow-xs">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Gross Ticket Sales</span>
@@ -945,7 +957,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Actions & Payout Log */}
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 mb-6 gap-3">
                       <div>
@@ -971,7 +982,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Payout History Table */}
                     <div className="overflow-x-auto text-xs font-semibold">
                       <table className="w-full text-left">
                         <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px]">
@@ -1000,7 +1010,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* 4. STAFF & VOLUNTEERS TAB (FEATURE 3) */}
+              {/* 4. STAFF & VOLUNTEERS TAB */}
               {activeTab === 'staff' && (
                 <div className="space-y-6">
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
@@ -1019,7 +1029,6 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Staff Table */}
                     <div className="overflow-x-auto text-xs font-semibold">
                       <table className="w-full text-left">
                         <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px]">
@@ -1057,7 +1066,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* 5. CERTIFICATES TAB (FEATURE 4) */}
+              {/* 5. CERTIFICATES TAB */}
               {activeTab === 'certificates' && (
                 <div className="space-y-6">
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
@@ -1086,7 +1095,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Checked-In Roster for Certs */}
                     <div className="space-y-3">
                       <span className="text-xs font-bold text-slate-700 block">Verified Checked-In Attendees:</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-semibold">
@@ -1119,7 +1127,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* 6. BROADCASTS & BULK EMAIL TAB (FEATURE 5) */}
+              {/* 6. BROADCASTS & BULK EMAIL TAB */}
               {activeTab === 'announcements' && (
                 <div className="space-y-6">
                   <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
@@ -1236,6 +1244,35 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* UNIVERSAL MOBILE & DESKTOP PDF DOWNLOAD BANNER (ALL.pdf) */}
+                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-slate-50 border border-blue-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center space-x-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-bold text-slate-900 text-sm">Complete Event Guidelines & Handbook (ALL.pdf)</h3>
+                          <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold uppercase">111 KB PDF</span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          Download the official rulebook, schedules, and venue map — works on any mobile or computer.
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/ALL.pdf"
+                      download="EventHub_Complete_Handbook.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 transition shadow-sm shrink-0"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download PDF</span>
+                    </a>
+                  </div>
+
                   {/* Event Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {attendeeFilteredEvents.map(evt => {
@@ -1349,11 +1386,58 @@ export default function App() {
                 </div>
               )}
 
-              {/* ATTENDEE: ABOUT & HELP TABS */}
+              {/* ATTENDEE: ABOUT TAB */}
               {activeTab === 'about' && (
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-3 text-xs leading-relaxed text-slate-600 font-medium max-w-2xl mx-auto">
                   <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">About EventHub</h2>
-                  <p>EventHub is an end-to-end multi-tenant platform for campus societies and professional organizers.</p>
+                  <p>EventHub is an end-to-end multi-tenant platform for campus societies and professional organizers, providing scoped analytics, QR gate check-ins, and instant pass generation.</p>
+                </div>
+              )}
+
+              {/* ATTENDEE: DOCS & HELP TAB (DEDICATED PDF DOWNLOAD SECTION) */}
+              {activeTab === 'help' && (
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+                    <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">Downloadable Event Documents</h2>
+                    <p className="text-xs text-slate-600">
+                      Download the complete event manual directly to your phone or computer for offline access at the venue.
+                    </p>
+
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+                      <div className="flex items-center space-x-3 overflow-hidden">
+                        <div className="p-2.5 rounded-lg bg-blue-100 text-blue-700 shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="truncate">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">ALL.pdf — Complete Event Manual & Schedules</h4>
+                          <p className="text-[11px] text-slate-500">PDF Document • 111 KB • Universal Mobile/PC Download</p>
+                        </div>
+                      </div>
+
+                      <a
+                        href="/ALL.pdf"
+                        download="EventHub_Complete_Handbook.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 shrink-0 transition shadow-xs"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-3 text-xs text-slate-600">
+                    <h3 className="text-sm font-bold text-slate-900">Frequently Asked Questions</h3>
+                    <div>
+                      <p className="font-bold text-slate-800">How do I enter the venue?</p>
+                      <p className="mt-0.5">Open "My Passes" and show your unique PASS-XXXXXX ID at the entry gate scanner.</p>
+                    </div>
+                    <div className="pt-2 border-t border-slate-100">
+                      <p className="font-bold text-slate-800">When are certificates issued?</p>
+                      <p className="mt-0.5">Once your pass is scanned at the gate, organizers generate and dispatch verified certificates to your email.</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </main>
@@ -1363,7 +1447,7 @@ export default function App() {
           {/* MODALS */}
           {/* ========================================================= */}
 
-          {/* HOST NEW EVENT MODAL WITH MULTI-TIER TICKETS (FEATURE 6) */}
+          {/* HOST NEW EVENT MODAL WITH MULTI-TIER TICKETS */}
           {isCreateModalOpen && (
             <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs font-semibold max-h-[90vh] overflow-y-auto">
@@ -1405,7 +1489,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Multi-Tier Ticket Configuration */}
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                     <span className="block font-bold text-slate-800">Multi-Tier Ticket Definitions</span>
                     {newEvent.ticketTiers.map((t, idx) => (
@@ -1433,7 +1516,7 @@ export default function App() {
             </div>
           )}
 
-          {/* BANK SETTLEMENT MODAL (FEATURE 2) */}
+          {/* BANK SETTLEMENT MODAL */}
           {isPayoutModalOpen && (
             <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs font-semibold">
@@ -1465,7 +1548,7 @@ export default function App() {
             </div>
           )}
 
-          {/* ADD STAFF MODAL (FEATURE 3) */}
+          {/* ADD STAFF MODAL */}
           {isAddStaffModalOpen && (
             <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs font-semibold">
@@ -1499,7 +1582,7 @@ export default function App() {
             </div>
           )}
 
-          {/* CERTIFICATE PREVIEW MODAL (FEATURE 4) */}
+          {/* CERTIFICATE PREVIEW MODAL */}
           {previewCertModal && (
             <div className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl border-4 border-slate-900 max-w-lg w-full p-8 shadow-2xl space-y-6 text-center relative font-serif">
